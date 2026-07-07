@@ -1,23 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { faker } from '@faker-js/faker';
 import test, { expect } from '@playwright/test';
+import { authorsUrl } from '../../src/helpers/url.helper';
 import { postRequest } from '../../src/requests/post.request';
+import { parseResponse } from '../../src/helpers/parse.response.helper';
+import { AuthorResponse } from '../../src/models/authors/author.model';
+import { getRandomAuthorPayload } from '../../src/datafactory/authors/author.data';
+import { statusCode } from '../../src/helpers/response.status.helper';
+import { HTTP_201_CREATED } from '../../src/const/http.status.codes.const';
 
-test.describe('POST /authors 2xx', { tag: ['@authors', '@smoke'] }, () => {
+test.describe('POST API_AUTHORS 2xx', { tag: ['@authors', '@smoke'] }, () => {
   test('create new author', async ({}) => {
-    const FIRST_NAME = faker.person.firstName();
-    const LAST_NAME = faker.person.lastName();
-    const authorPayload = {
-      firstName: FIRST_NAME,
-      lastName: LAST_NAME,
-    };
 
-    const response = await postRequest('/authors', authorPayload);
-    expect(response.status()).toBe(201);
+    const authorPayload = getRandomAuthorPayload();
 
-    const responseBody = await response.json();
-    expect(responseBody.firstName).toBe(FIRST_NAME);
-    expect(responseBody.lastName).toBe(LAST_NAME);
+    const response = await postRequest(authorsUrl(), authorPayload);
+    expect(statusCode(response)).toBe(HTTP_201_CREATED);
+
+    const responseBody = await parseResponse<AuthorResponse>(response);
+    expect(responseBody.firstName).toBe(authorPayload.firstName);
+    expect(responseBody.lastName).toBe(authorPayload.lastName);
   });
 });

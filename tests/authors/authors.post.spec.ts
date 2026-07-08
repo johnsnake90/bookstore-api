@@ -1,15 +1,14 @@
-import test, { expect } from '@playwright/test';
-import { authorsUrl } from '../../src/helpers/url.helper';
-import { postRequest } from '../../src/requests/post.request';
-import { parseResponse } from '../../src/helpers/parse.response.helper';
-import { AuthorResponse } from '../../src/models/authors/author.model';
-import { getRandomAuthorPayload } from '../../src/datafactory/authors/author.data';
-import { statusCode } from '../../src/helpers/response.status.helper';
-import { HTTP_201_CREATED } from '../../src/const/http.status.codes.const';
+import { AuthorResponse } from '@api-models/authors/authors.model';
+import { HTTP_201_CREATED } from '@const/http.status.codes.const';
+import { getRandomAuthorPayload } from '@datafactory/authors/author.data';
+import { expect, test } from '@fixtures/api.fixture';
+import { parseResponse } from '@helpers/parse.response.helper';
+import { statusCode } from '@helpers/response.status.helper';
+import { authorsUrl } from '@helpers/url.helper';
+import { postRequest } from '@requests/post.request';
 
-test.describe('POST API_AUTHORS 2xx', { tag: ['@authors', '@smoke'] }, () => {
-  test('create new author', async ({}) => {
-
+test.describe('POST /authors 2xx', { tag: ['@authors', '@smoke'] }, () => {
+  test('create new author', async () => {
     const authorPayload = getRandomAuthorPayload();
 
     const response = await postRequest(authorsUrl(), authorPayload);

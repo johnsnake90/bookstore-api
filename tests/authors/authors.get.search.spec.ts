@@ -1,93 +1,63 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import test, { expect } from '@playwright/test';
-import { HTTP_200_OK } from '../../src/const/http.status.codes.const';
-import { statusCode } from '../../src/helpers/response.status.helper';
-import { authorsUrl } from '../../src/helpers/url.helper';
+import { AuthorResponse } from '@api-models/authors/authors.model';
+import { HTTP_200_OK } from '@const/http.status.codes.const';
+import { expect, test } from '@fixtures/api.fixture';
+import { parseResponse } from '@helpers/parse.response.helper';
+import { statusCode } from '@helpers/response.status.helper';
+import { authorsUrl, QueryParams } from '@helpers/url.helper';
+import { getRequest } from '@requests/get.request';
 
 const EXPECTED_FIRST_NAME = 'Joshua';
-const NON_EXISTING_FIRST_NAME = '0';
 const EXPECTED_LAST_NAME = 'Bloch';
-const NON_EXISTING_LAST_NAME = '0';
+const NON_EXISTING_NAME = 'XXXXXX';
 
-test.describe('GET API_AUTHORS 2xx', { tag: ['@authors', '@smoke', '@search'] }, () => {
-  test('search by firstName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        firstName: EXPECTED_FIRST_NAME,
-      },
+const existingAuthors = [
+  {
+    queryParams: { firstName: EXPECTED_FIRST_NAME },
+    description: 'search by firstName',
+  },
+  {
+    queryParams: { lastName: EXPECTED_LAST_NAME },
+    description: 'search by lastName',
+  },
+  {
+    queryParams: { firstName: EXPECTED_FIRST_NAME, lastName: EXPECTED_LAST_NAME } as QueryParams,
+    description: 'search by firstName and lastName',
+  },
+];
+
+const nonExistingAuthors = [
+  {
+    queryParams: { firstName: NON_EXISTING_NAME },
+    description: 'search by non existing firstName',
+  },
+  {
+    queryParams: { lastName: NON_EXISTING_NAME },
+    description: 'search by non existing lastName',
+  },
+  {
+    queryParams: { firstName: NON_EXISTING_NAME, lastName: NON_EXISTING_NAME } as QueryParams,
+    description: 'search by non existing firstName and lastName',
+  },
+];
+
+test.describe('GET /authors 2xx', { tag: ['@authors', '@smoke', '@search'] }, () => {
+  existingAuthors.forEach(({ queryParams, description }) => {
+    test(`authors: ${description}`, async () => {
+      const response = await getRequest(authorsUrl(queryParams));
+      expect(statusCode(response)).toBe(HTTP_200_OK);
+
+      const authors = await parseResponse<AuthorResponse[]>(response);
+      expect(authors.length).toBeGreaterThanOrEqual(1);
     });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('search by lastName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        lastName: EXPECTED_LAST_NAME,
-      },
+  nonExistingAuthors.forEach(({ queryParams, description }) => {
+    test(`authors: ${description}`, async () => {
+      const response = await getRequest(authorsUrl(queryParams));
+      expect(statusCode(response)).toBe(HTTP_200_OK);
+
+      const authors = await parseResponse<AuthorResponse[]>(response);
+      expect(authors.length).toBe(0);
     });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(1);
-  });
-
-  test('search by firstName and lastName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        firstName: EXPECTED_FIRST_NAME,
-        lastName: EXPECTED_LAST_NAME,
-      },
-    });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(1);
-  });
-
-  test('search by non existing firstName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        firstName: NON_EXISTING_FIRST_NAME,
-      },
-    });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(0);
-  });
-
-  test('search by non existing lastName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        firstName: NON_EXISTING_LAST_NAME,
-      },
-    });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(0);
-  });
-
-  test('search by non existing firstName and lastName', async ({ request }) => {
-    const response = await request.get(authorsUrl(), {
-      params: {
-        firstName: NON_EXISTING_FIRST_NAME,
-        lastName: NON_EXISTING_LAST_NAME,
-      },
-    });
-
-    expect(statusCode(response)).toBe(HTTP_200_OK);
-
-    const authors = await response.json();
-    expect(authors.length).toBeGreaterThanOrEqual(0);
   });
 });

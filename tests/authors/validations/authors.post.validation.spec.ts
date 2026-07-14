@@ -1,91 +1,77 @@
 import { ErrorResponse } from '@api-models/response.error.model';
 import { BAD_REQUEST } from '@const/http.messages.const';
 import { HTTP_400_BAD_REQUEST } from '@const/http.status.codes.const';
+import { FIRST_NAME_INCORRECT_DATA, LAST_NAME_INCORRECT_DATA } from '@const/response.errors.const';
+import { MAX_LENGTH, MIN_LENGTH } from '@const/validation.const';
+import { getRandomAuthorOverridePayload } from '@datafactory/authors/author.data';
 import { expect, test } from '@fixtures/api.fixture';
 import { parseResponse } from '@helpers/parse.response.helper';
-import { getRandomFirstName, getRandomLastName } from '@helpers/random.data.helper';
 import { statusCode } from '@helpers/response.status.helper';
 import { authorsUrl } from '@helpers/url.helper';
 import { postRequest } from '@requests/post.request';
 
-test.describe('POST /authors 2xx', { tag: ['@authors', '@validation', '@4xx'] }, () => {
-  test(`empty firstName`, async () => {
-    const authorPayload = { firstName: '', lastName: getRandomLastName() };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
+const invalidAuthorPayload = [
+  {
+    authorPayload: getRandomAuthorOverridePayload({ firstName: undefined }),
+    message: FIRST_NAME_INCORRECT_DATA,
+    description: 'missing firstName',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ firstName: '' }),
+    message: FIRST_NAME_INCORRECT_DATA,
+    description: 'empty firstName',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ firstName: 'a'.repeat(MIN_LENGTH - 1) }),
+    message: FIRST_NAME_INCORRECT_DATA,
+    description: 'firstName less than 3 characters',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ firstName: 'a'.repeat(MAX_LENGTH + 1) }),
+    message: FIRST_NAME_INCORRECT_DATA,
+    description: 'firstName more than 128 characters',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ firstName: 'Bar7ek' }),
+    message: FIRST_NAME_INCORRECT_DATA,
+    description: 'firstName with invalid characters',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ lastName: undefined }),
+    message: LAST_NAME_INCORRECT_DATA,
+    description: 'missing lastName',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ lastName: '' }),
+    message: LAST_NAME_INCORRECT_DATA,
+    description: 'empty lastName',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ lastName: 'a'.repeat(MIN_LENGTH - 1) }),
+    message: LAST_NAME_INCORRECT_DATA,
+    description: 'lastName less than 3 characters',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ lastName: 'a'.repeat(MAX_LENGTH + 1) }),
+    message: LAST_NAME_INCORRECT_DATA,
+    description: 'lastName more than 128 characters',
+  },
+  {
+    authorPayload: getRandomAuthorOverridePayload({ lastName: 'Test70w7' }),
+    message: LAST_NAME_INCORRECT_DATA,
+    description: 'lastName with invalid characters',
+  },
+];
 
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('firstName incorrect input data');
-  });
+test.describe('POST /authors 4xx', { tag: ['@authors', '@validation', '@4xx'] }, () => {
+  invalidAuthorPayload.forEach(({ authorPayload, message, description }) => {
+    test(`author: ${description}`, async () => {
+      const response = await postRequest(authorsUrl(), authorPayload);
+      expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
 
-  test(`firstName less than 3 characters`, async () => {
-    const authorPayload = { firstName: 'a'.repeat(2), lastName: getRandomLastName() };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('firstName incorrect input data');
-  });
-
-  test(`firstName more than 128 characters`, async () => {
-    const authorPayload = { firstName: 'a'.repeat(129), lastName: getRandomLastName() };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('firstName incorrect input data');
-  });
-
-  test(`firstName invalid characters`, async () => {
-    const authorPayload = { firstName: 'JP 2137', lastName: getRandomLastName() };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('firstName incorrect input data');
-  });
-
-  test(`empty lastName`, async () => {
-    const authorPayload = { firstName: getRandomFirstName(), lastName: '' };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('lastName incorrect input data');
-  });
-
-  test(`lastName less than 3 characters`, async () => {
-    const authorPayload = { firstName: getRandomFirstName(), lastName: 'a'.repeat(2) };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('lastName incorrect input data');
-  });
-
-  test(`lastName more than 128 characters`, async () => {
-    const authorPayload = { firstName: getRandomFirstName(), lastName: 'a'.repeat(129) };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('lastName incorrect input data');
-  });
-
-  test(`lastName invalid characters`, async () => {
-    const authorPayload = { firstName: getRandomFirstName(), lastName: 'Deltron 0' };
-    const response = await postRequest(authorsUrl(), authorPayload);
-    expect(statusCode(response)).toBe(HTTP_400_BAD_REQUEST);
-
-    const responseBody = await parseResponse<ErrorResponse>(response);
-    expect(responseBody.error).toBe(BAD_REQUEST);
-    expect(responseBody.message).toContain('lastName incorrect input data');
+      const responseBody = await parseResponse<ErrorResponse>(response);
+      expect(responseBody.error).toBe(BAD_REQUEST);
+      expect(responseBody.message).toContain(message);
+    });
   });
 });

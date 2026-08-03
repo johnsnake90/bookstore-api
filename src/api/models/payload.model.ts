@@ -1,3 +1,4 @@
-import { AuthorPayload } from './authors/authors.model';
+import { AuthorPayload } from './authors/author.model';
+import { BookPayload } from './books/book.model';
 
-export type APIPayload = AuthorPayload;
+export type APIPayload = AuthorPayload | BookPayload;

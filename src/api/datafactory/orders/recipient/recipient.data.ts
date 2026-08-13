@@ -1,10 +1,17 @@
-import { RecipientPayload } from "@api-models/orders/recipient.model";
-import { getRandomCity, getRandomEmail, getRandomFirstName, getRandomLastName, getRandomStreet, getRandomZipCode } from "@helpers/random.data.helper";
+import { RecipientPayload } from '@api-models/orders/recipient.model';
+import {
+  getRandomCity,
+  getRandomEmail,
+  getRandomFirstName,
+  getRandomStreet,
+  getRandomZipCode,
+} from '@helpers/random.data.helper';
+
+type Override<T> = Partial<T>;
 
 export function getRandomRecipientPayload(): RecipientPayload {
-
   const randomFirstName = getRandomFirstName();
-  const randomLastName = getRandomLastName();
+  const randomLastName = getRandomFirstName();
   const randomCity = getRandomCity();
   const randomStreet = getRandomStreet();
   const randomZipCode = getRandomZipCode();
@@ -12,10 +19,17 @@ export function getRandomRecipientPayload(): RecipientPayload {
 
   return {
     name: `${randomFirstName} ${randomLastName}`,
-    phone: '500600700',
+    phone: '600700800',
     street: randomStreet,
     city: randomCity,
     zipCode: randomZipCode,
-    email: randomEmail
-  }
+    email: randomEmail,
+  };
+}
+
+export function getRandomRecipientOverridePayload(overrides: Override<RecipientPayload>): RecipientPayload {
+  return {
+    ...getRandomRecipientPayload(),
+    ...overrides,
+  };
 }

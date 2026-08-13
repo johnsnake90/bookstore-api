@@ -17,7 +17,8 @@
       "@const/*": ["src/api/const/*"],
       "@datafactory/*": ["src/api/datafactory/*"],
       "@requests/*": ["src/api/requests/*"],
-      "@api-models/*": ["src/api/models/*"]
+      "@api-models/*": ["src/api/models/*"],
+      "@api-steps/*": ["src/api/steps/*"]
     }
   }
 }
